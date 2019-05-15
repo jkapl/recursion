@@ -22,32 +22,50 @@ var stringifyJSON = function(obj) {
   
   //if current section is an obj invoke objIterate  
   function objIterate(obj) {
-    var result = '{'
-    // for (var key in obj) {
-    //     result = result + '"' + key.toString() + '"' + ':' + obj[key] + ',';
-    // }    
+    var result = [];
     for (var key in obj) {
-        result = result + '"' + elementLogic(key) + '"' + ':' + elementLogic(obj[key]) + ',';
+        if (Array.isArray(key)) {
+            //result.push(arrLogic(key) + ':');
+            var k = arrLogic(key) + ':';
+        } if (typeof key === 'object' && key !== null) {
+            var k = objIterate(key);
+        } else {
+            //result.push(elementLogic(key)+':');
+            var k = elementLogic(key)+':';
+        }
+        if (Array.isArray(obj[key])) {
+            //result.push(arrLogic(obj[key]));
+            var val = arrLogic(obj[key]);
+        }  else if (typeof obj[key] === 'object' && obj[key] !== null) {
+            var val = objIterate(obj[key]);
+        } else {
+            //result.push(elementLogic(obj[key]));
+            var val = elementLogic(obj[key]);
+        }
+        result.push(k + val);
+        //result = result + '"' + elementLogic(key) + '"' + ':' + elementLogic(obj[key]) + ',';
     }
-    return result.slice(0,result.length-1) + '}';
+
+    return '{' + result.join(',') + '}';
   }
   
 
   //if current section is an array invoke arrIterate
-  function arrIterate(arr) {
-    if (arr.length === 0) { return '[]' }
-    var result = '['
+  function arrLogic(arr) {
+    let result = []
+    if (Array.isArray(arr) && arr.length === 0) { return '[]' }
     for (var i=0; i<arr.length; i++) {
-      if (Array.isArray(arr[i])) { 
-        result = result + arrIterate(arr[i])
+      if (Array.isArray(arr[i])) {
+        result.push(arrLogic(arr[i]))
+      } else {
+        result.push(elementLogic(arr[i]));
       }
-      result = result + elementLogic(arr[i]) + ',';
     }
-    return result.slice(0,result.length-1) + ']';
+    return '[' + result + ']';
   }
 
   if (Array.isArray(obj)) {
-    return arrIterate(obj);
+    return arrLogic(obj);
   }
 
   if (obj === null) {
